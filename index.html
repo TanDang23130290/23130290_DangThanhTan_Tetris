@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Tetris</title>
     <link rel="stylesheet" href="style.css">
+    <script src="main.js"></script>
 </head>
 <body>
 
@@ -29,7 +30,41 @@
 
 
     //*Màn hình chơi game
-    <div class="play-menu"></div>
+    <div id="play-menu" class="screen">
+        <button id="btn-close-button" class="btn-close" X></button>
+
+        <div class="play-layout">
+            <div class="sidebar-gamebox">
+ //* Tiêu đề màn chơi
+                <div class ="title-box">
+                <h1 class="stage-title">1-1 </h1>
+                </div>
+
+ //* Bảng diểm
+                <div class="score-box">
+                    <span class="score"></span>
+                    <span id="score-value"></span>
+                </div>
+
+  //* Ô dự báo
+                <div class="next-piece-box">
+                    <canvas id="next-canvas" width ="90" height="90"></canvas>
+                </div>
+   //* toolbar
+
+                <div class ="toolbox">
+                    <button class="item"></button>
+                    <button class="item"></button>
+                    <button class="item"></button>
+                    <button class="item"></button>
+                    <button class="item"></button>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
 </div>
 </body>
 </html>

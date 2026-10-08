@@ -100,3 +100,25 @@ screen {
     background: rgba(138, 141, 205, 0.1);
     color: white;
 }
+.game-screen{
+    position:relative;
+}
+btn-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    color: #8a8dcd;
+    font-size: 1.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    line-height: 1;
+    transition: all 0.2s ease;
+}
+
+.btn-close:hover {
+    color: #ff007f;
+    transform: scale(1.2);
+}
