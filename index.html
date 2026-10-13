@@ -4,67 +4,70 @@
     <meta charset="UTF-8">
     <title>Tetris</title>
     <link rel="stylesheet" href="style.css">
-    <script src="main.js"></script>
 </head>
 <body>
 
 <div class="game-container">
     <!-- MainUI -->
-    <div id="main-menu" class="screen-active">
+    <div id="main-menu" class="screen screen-active">
         <h1 class="game-title">Tetris</h1>
         <section class="menu-button">
-            <button class="btn-play-button" class="button-primary">Chơi</button>
-            <button class="btn-setting-button" class="button-secondary">Cài đặt</button>
+            <button id="btn-play-button" class="btn-primary">Chơi</button>
+            <button class="btn-setting-button btn-secondary">Cài đặt</button>
         </section>
     </div>
-    //*Màn hình chọn màn chơi
+
+    <!-- Màn hình chọn ải -->
     <div id="select-menu" class="screen">
         <h1 class="Menu-title">Chọn màn chơi</h1>
         <section class="Stage-choose">
-            //Màn 1
+            <!-- Màn 1 -->
             <button class="Stage1" data-stage="1">
-                <span class="Stage-title" Màn 1></span>
+                <span class="Stage-title">Màn 1</span>
             </button>
         </section>
+        <button id="btn-back-to-menu" class="btn-back">Quay lại</button>
     </div>
 
-
-    //*Màn hình chơi game
+    <!-- Màn hình chơi game -->
     <div id="play-menu" class="screen">
-        <button id="btn-close-button" class="btn-close" X></button>
+        <button id="btn-close-button" class="btn-close">X</button>
 
         <div class="play-layout">
-            <div class="sidebar-gamebox">
- //* Tiêu đề màn chơi
-                <div class ="title-box">
-                <h1 class="stage-title">1-1 </h1>
+            <!-- Thêm canvas bàn chơi bên trái để khớp với giao diện Tetris -->
+            <div class="game-board-container" style="display:inline-block; vertical-align:top;">
+                <canvas id="tetris-canvas" width="240" height="480"></canvas>
+            </div>
+
+            <div class="sidebar-gamebox" style="display:inline-block; vertical-align:top; margin-left: 8px;">
+                <!-- Tiêu đề màn chơi -->
+                <div class="title-box">
+                    <h1 class="stage-title" style="color: #ffdd00; font-size: 1.3rem;">1-1</h1>
                 </div>
 
- //* Bảng diểm
+                <!-- Bảng diểm-->
                 <div class="score-box">
-                    <span class="score"></span>
-                    <span id="score-value"></span>
+                    <span class="score" style="font-size: 0.75rem; color: #a0a5e8;">Điểm:</span>
+                    <span id="score-value" style="color: #00f0ff; font-weight: bold;">0000</span>
                 </div>
 
-  //* Ô dự báo
+                <!-- Ô dự báo-->
                 <div class="next-piece-box">
-                    <canvas id="next-canvas" width ="90" height="90"></canvas>
-                </div>
-   //* toolbar
-
-                <div class ="toolbox">
-                    <button class="item"></button>
-                    <button class="item"></button>
-                    <button class="item"></button>
-                    <button class="item"></button>
-                    <button class="item"></button>
-
+                    <canvas id="next-canvas" width="90" height="90" style="background: #08091a; border-radius: 4px;"></canvas>
                 </div>
 
+                <!-- toolbar-->
+                <div class="toolbox">
+                    <button class="item">♦</button>
+                    <button class="item">⬡</button>
+                    <button class="item">★</button>
+                    <button class="item">✡</button>
+                </div>
             </div>
         </div>
-
     </div>
 </div>
+
+<script src="main.js"></script>
 </body>
 </html>
