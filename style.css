@@ -225,3 +225,59 @@ body {
     font-weight: bold;
     color: #00f0ff;
 }
+.next-piece-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    background: #1e2145;
+    border: 1px solid #3d428b;
+    border-radius: 6px;
+    padding: 6px 0;
+}
+.box-label {
+    font-size: 0.7rem;
+    color: #a0a5e8;
+    margin-bottom: 4px;
+}
+
+#next-canvas {
+    background-color: #08091a;
+    border: 1px solid #2a2d5c;
+    border-radius: 4px;
+}
+/* Thanh công cụ */
+.toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+}
+
+.item {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #252850;
+    border: 1px solid #4e54c8;
+    border-radius: 6px;
+    color: #ff007f;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.item:hover {
+    background: #4e54c8;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(255, 0, 127, 0.5);
+}
+/* nút X */
+#btn-close-button {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    width: 100%;
+    margin-top: 0;
+}
