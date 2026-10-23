@@ -143,44 +143,47 @@ function drawGame() {
         ctx.lineTo(canvas.width, y);
         ctx.stroke();
     }
-    //Vẽ khối gạch đang rơi
+    // Vẽ khối gạch đang rơi
     if (currentPiece.shape) {
         currentPiece.shape.forEach((row, r) => {
             row.forEach((value, c) => {
                 if (value) {
                     drawBlock(ctx, currentPiece.x + c, currentPiece.y + r, currentPiece.color);
-
                 }
             });
         });
     }
-    //set tickrate cho game
-    let dropCounter = 0;
-    let dropInterval = 1000; // Khối gạch rơi xuống sau mỗi 1000ms (khoảng 1s)
-    let lastTime = 0;
-
-    //tạo vòng lặp chạy game
-    function gameLoop(time = 0) {
-        const deltaTime = time - lastTime;
-        lastTime = time;
-
-        dropCounter += deltaTime;
-        if (dropCounter > dropInterval) {
-            currentPiece.y++; //Cho khối gạch dịch xuống 1 hàng
-            if (currentPiece.y + currentPiece.shape.length > Rows) {
-                currentPiece.y = 0; // Quay lại đỉnh để rơi tiếp
-                spawnPiece();
-            }
-            dropCounter = 0;
-        }
-        drawGame();
-        requestAnimationFrame(gameLoop);
-    }
 }
-    document.querySelector(".Stage1").addEventListener("click", () => {
-        spawnPiece(); // Tạo khối gạch đầu tiên
-        lastTime = performance.now();
-        requestAnimationFrame(gameLoop); // Bắt đầu chạy vòng lặp game
-    });
+// Cấu hình tickrate cho game
+let dropCounter = 0;
+let dropInterval = 1000; // Khối gạch rơi xuống sau mỗi 1000ms (khoảng 1s)
+let lastTime = 0;
+
+// Tạo vòng lặp chạy game chuẩn
+function gameLoop(time = 0) {
+    const deltaTime = time - lastTime;
+    lastTime = time;
+
+    dropCounter += deltaTime;
+    if (dropCounter > dropInterval) {
+        currentPiece.y++; // Cho khối gạch dịch xuống 1 hàng
+        if (currentPiece.y + currentPiece.shape.length > Rows) {
+            currentPiece.y = 0; // Quay lại đỉnh để rơi tiếp
+            spawnPiece();
+        }
+        dropCounter = 0;
+    }
+
+    drawGame(); // Gọi vẽ liên tục mỗi khung hình
+    requestAnimationFrame(gameLoop);
+}
+
+// Sự kiện click chọn Màn 1 để bắt đầu chơi
+document.querySelector(".Stage1").addEventListener("click", () => {
+    ShowScreen(screen.Playmenu);
+    spawnPiece(); // Tạo khối gạch đầu tiên
+    lastTime = performance.now();
+    requestAnimationFrame(gameLoop); // Bắt đầu chạy vòng lặp game
+});
 
 
