@@ -177,6 +177,107 @@ function gameLoop(time = 0) {
     drawGame(); // Gọi vẽ liên tục mỗi khung hình
     requestAnimationFrame(gameLoop);
 }
+//Kiểm tra va chạm tránh khối gạch xoay vào tường
+function collide(piece, offsetX, offsetY) {
+    for(let r=0; r< piece.shape.length; r++){
+        for (let c = 0; c<piece.shape[r].length; c++) {
+            if(piece.shape[r][c] !==0) {
+                let newX = piece.x + c +offsetX;
+                let newY =piece.y +r +offsetY;
+                //kiểm tra va chạm biên trái, phải, đáy
+                if(newX <0|| newX>=Cols||newY >=Rows){
+                    return true;
+                }
+                //kiểm tra va chạm các khối khác
+                if(newY >=0 && board[newY][newX]!=0){
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+//Xử lý thao tác bàn phím
+document.addEventListener('keydown', event =>{
+if(event.key ==='ArrowLeft') {
+    //dịch sang trái
+    if (!collide(currentPiece, -1, 0)) {
+        currentPiece.x--;
+    }
+    //dịch sang phải
+} else if(event.key ==='ArrowRight') {
+    if (!collide(currentPiece, 1, 0)) {
+        currentPiece.x++;
+    }
+    //thả nhanh xuống 1 ô
+}else if (event.key === 'ArrowDown') {
+    if (!collide(currentPiece, 0, 1)) {
+        currentPiece.y++;
+        dropCounter = 0; //làm mới thời gian rơi tự động
+    }
+}else if(event,key==='ArrowUp') {
+    rotatePiece();
+}
+});
+//Xoay khối gạch
+function rotatePiece(){
+    let originalShape =currentPiece.shape;
+    //
+    let transposed = currentPiece.shape.map((_, colIndex) =>
+        currentPiece.shape.map(row>row[colIndex]));
+    currentPiece.shape = transpose.reverse();
+    // kiểm tra nếu xoay xong mà bị kẹt tường thì đẩy ra hoặc hủy xoay
+    let offset =1
+    while(collide(currentPiece,0,0)){
+        currentPiece.x += offset;
+        offset = -(offset + (offset >0 ? 1 : -1));
+         if (offset >  currentPiece.shape[0].length){
+             //nếu xoay hướng nào cũng kẹt thì để như ban đầu
+             currentPiece.shape = originalShape;
+             break;
+         }
+    }
+}
+//Khóa khối gạch vào bảng
+function mergePiece(){
+    currentPiece.shape.forEach((row,r) => {
+        row.forEach((value,c) => {
+            if (value!==0){
+                let boardY = currentPiece.y + r;
+                let boardX = currentPiece.x +c
+                if(boardY >=0){
+                    boardY= Math.min(boardY, Rows-1);
+                    boardX= Math.max(0,Math.min(boardX, Cols  -1));
+                    board[boardY][boardX] =currentPiece.color;//lưu màu sắc khối vào bảng
+
+                }
+            }
+        });
+    });
+}
+//logic dọn hàng
+function clearLine(){
+    let rowCount =0;
+    outer: for (let r= Rows -1; r>=0 ;r--) {
+        for (let c = 0; c < Cols; c++) {
+            if (board[r][c] === 0) {
+                continue outer; //nếu có 1 ô trống thì bỏ qua hàng này
+            }
+        }
+        // Nếu hàng r đầy, cắt bỏ hàng đó và thêm một hàng trống 0 vào trên cùng
+        const row = board.splice(r, 1)[0].fill(0);
+        board.unshift(row);
+        r++; // Kiểm tra lại hàng hiện tại sau khi dồn xuống
+        rowCount++;
+    }
+    // Cộng điểm nếu có xóa hàng (ví dụ: 1 hàng = 100 điểm, 4 hàng = 800 điểm
+    if (rowCount > 0) {
+        // Bạn có thể cập nhật biến điểm số và hiển thị lên giao diện ở đây
+        console.log(`Đã xóa ${rowCount} hàng!`);
+    }
+}
+
+
 
 // Sự kiện click chọn Màn 1 để bắt đầu chơi
 document.querySelector(".Stage1").addEventListener("click", () => {
@@ -185,5 +286,6 @@ document.querySelector(".Stage1").addEventListener("click", () => {
     lastTime = performance.now();
     requestAnimationFrame(gameLoop); // Bắt đầu chạy vòng lặp game
 });
+
 
 
