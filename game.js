@@ -608,6 +608,9 @@ function updateTimerDisplay() {
                     row1 = Rows - 2;
                 }
 
+                // Đảm bảo an toàn mảng không bị số âm
+                if (row1 < 0) row1 = 0;
+                // Làm trống 2 hàng được chọn
                 if (row1 >= 0 && row1 < Rows) board[row1].fill(0);
                 if (row2 >= 0 && row2 < Rows) board[row2].fill(0);
 
@@ -660,7 +663,10 @@ function updateTimerDisplay() {
             function updateToolUI(elementId, count) {
                 const btn = document.getElementById(elementId);
                 if (btn) {
-                    btn.querySelector(".tool-count").innerText = count;
+                    const countEl = btn.querySelector(".tool-count");
+                    if (countEl) {
+                        countEl.innerText = count;
+                    }
                 }
             }
 

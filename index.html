@@ -57,7 +57,7 @@
         text-shadow: 0 0 10px #00f0ff, 0 0 20px #00f0ff;
         margin-bottom: 50px;
     }
-    .btn-primary, .btn-secondary, .btn-back {
+    .btn-primary,  .btn-back {
         padding: 14px 20px;
         font-size: 1.1rem;
         font-weight: bold;
@@ -77,15 +77,7 @@
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(255, 0, 127, 0.6);
     }
-    .btn-secondary {
-        background: #2a2d5c;
-        color: #a0a5e8;
-        border: 1px solid #4e54c8;
-    }
-    .btn-secondary:hover {
-        background: #383c7a;
-        color: white;
-    }
+
     .btn-back {
         margin-top: 30px;
         background: transparent;
@@ -193,6 +185,7 @@
         gap: 8px;
         width: 100%;
     }
+
     .item {
         width: 100%;
         aspect-ratio: 1;
@@ -205,8 +198,16 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        position: relative; /* Quan trọng để hiển thị .tool-count tuyệt đối trong khung */
+        position: relative;
         transition: all 0.2s ease;
+    }
+
+    .tool-icon {
+        width: 70%;
+        height: 70%;
+        object-fit: contain;
+        object-position: center;
+        image-rendering: pixelated;
     }
     .item:hover {
         background: #4e54c8;
@@ -248,7 +249,6 @@
         <h1 class="game-title">Tetris</h1>
         <section class="menu-button">
             <button id="btn-play-button" class="btn-primary">Chơi</button>
-            <button class="btn-setting-button btn-secondary">Cài đặt</button>
         </section>
     </div>
 
@@ -314,10 +314,22 @@
 
                 <!-- toolbar-->
                 <div class="toolbox">
-                    <button class="item" id="tool-pickaxe" title="Cuốc chim: Click chọn vị trí để phá 2 hàng dọc (Không tính điểm)">♦ <span class="tool-count">3</span></button>
-                    <button class="item" id="tool-bomb" title="Bom: Click chọn vị trí để phá 2 hàng ngang (Không tính điểm)">⬡ <span class="tool-count">3</span></button>
-                    <button class="item" id="tool-clock" title="Đồng hồ: Tăng 30% tốc độ rơi, thưởng điểm tăng thêm 30%">★ <span class="tool-count">3</span></button>
-                    <button class="item" id="tool-dumbbell" title="Quả tạ: Kéo tất cả các khối lơ lửng rơi xuống đáy/chạm vật cản">✡ <span class="tool-count">3</span></button>
+                    <button class="item" id="tool-pickaxe" title="Cuốc chim: Click chọn vị trí để phá 2 hàng dọc (Không tính điểm)">
+                        <img src="img/Pickaxe.png" alt="Cuốc chim" class="tool-icon">
+                        <span class="tool-count">3</span>
+                    </button>
+                    <button class="item" id="tool-bomb" title="Bom: Click chọn vị trí để phá 2 hàng ngang (Không tính điểm)">
+                        <img src="img/Bomb.png" alt="Bom" class="tool-icon">
+                        <span class="tool-count">3</span>
+                    </button>
+                    <button class="item" id="tool-clock" title="Đồng hồ: Tăng 30% tốc độ rơi, thưởng điểm tăng thêm 30%">
+                        <img src="img/Clock.png" alt="Đồng hồ" class="tool-icon">
+                        <span class="tool-count">3</span>
+                    </button>
+                    <button class="item" id="tool-dumbbell" title="Quả tạ: Kéo tất cả các khối lơ lửng rơi xuống đáy/chạm vật cản">
+                        <img src="img/Dumbbell.png" alt="Quả tạ" class="tool-icon">
+                        <span class="tool-count">3</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -331,6 +343,6 @@
 </div>
 
 
-<script src="main.js"></script>
+<script src="game.js"></script>
 </body>
 </html>
