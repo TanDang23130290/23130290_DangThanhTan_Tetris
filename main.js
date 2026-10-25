@@ -61,6 +61,7 @@ document.querySelector(".Stage1").addEventListener("click", () => {
 
 
 
+
 //Khởi tạo giao diện Canvas
 const canvas = document.getElementById('tetris-canvas');
 const ctx = canvas.getContext('2d');
@@ -111,14 +112,12 @@ let toolCounts = {
     dumbbell: 3
 };
 let mousePos = { x: -1, y: -1 }; // Lưu tọa độ chuột trên canvas
-
 let activeClockEffect = false; // Trạng thái đồng hồ
 let selectedTool = null;       // Lưu công cụ đang chờ chọn vị trí (dành cho Cuốc chim / Bom)
-
 let board = Array.from({ length: Rows }, () => Array(Cols).fill(0));  // Vẽ bảng
-let score =0;
-let isPaused=false;
-let nextPiece=null;
+let score =0; //Điểm
+let isPaused=false; //Trạng thái dừng
+let nextPiece=null; //Khối tiếp theo
 //Tạo khối
 const shape =[
     { shape: [[1, 1, 1, 1]], color: '#00f0ff' }, //  - Xanh lam
@@ -354,6 +353,44 @@ function drawNextPiece() {
             rotatePiece();
         }
     });
+    //Xử lý thao tác chuôt
+canvas.addEventListener("mousemove", (event) => {
+    if (!selectedTool) return;
+    const rect = canvas.getBoundingClientRect();
+    mousePos.x = event.clientX - rect.left;
+    mousePos.y = event.clientY - rect.top;
+});
+
+// Rời chuột khỏi bảng thì ẩn hiển thị trước
+canvas.addEventListener("mouseleave", () => {
+    mousePos.x = -1;
+    mousePos.y = -1;
+});
+
+// Xử lý click chọn vị trí để thi triển công cụ
+canvas.addEventListener("click", (event) => {
+    if (!selectedTool || isPaused) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    const clickedCol = Math.floor(clickX / Block_Size);
+    const clickedRow = Math.floor(clickY / Block_Size);
+
+    if (selectedTool === 'pickaxe') {
+        usePickaxe(clickedCol);
+    } else if (selectedTool === 'bomb') {
+        useBomb(clickedRow);
+    }
+
+    // Reset trạng thái sau khi dùng xong
+    selectedTool = null;
+    mousePos.x = -1;
+    mousePos.y = -1;
+    canvas.style.cursor = "default";
+    resetToolButtonStyles();
+});
 
 //Xoay khối gạch
     function rotatePiece() {
@@ -485,7 +522,73 @@ function updateToolUI(elementId, count) {
         btn.querySelector(".tool-count").innerText = count;
     }
 }
+//Hàm reset hiệu ứng sáng trên thanh công cụ
+function resetToolButtonStyles() {
+    document.querySelectorAll(".toolbox .item").forEach(btn => {
+        btn.style.borderColor = "#4e54c8";
+        btn.style.background = "#252850";
+    });
+}
+//Xử lý chuột khi chọn công cụ
+document.getElementById("tetris-canvas").addEventListener("click", (event) => {
+    if (!selectedTool || isPaused) return;
 
+    const rect = canvas.getBoundingClientRect();
+    const clickX = event.clientX - rect.left;
+    const clickY = event.clientY - rect.top;
+
+    // Tính toán xem click vào cột mấy, hàng mấy dựa vào Block_Size
+    const clickedCol = Math.floor(clickX / Block_Size);
+    const clickedRow = Math.floor(clickY / Block_Size);
+
+    if (selectedTool === 'pickaxe') {
+        usePickaxe(clickedCol);
+    } else if (selectedTool === 'bomb') {
+        useBomb(clickedRow);
+    }
+
+    selectedTool = null; // Reset trạng thái chọn công cụ sau khi dùng xong
+    canvas.style.cursor = "default";
+});
+// Gán sự kiện click vào icon trên thanh công cụ để kích hoạt chế độ chọn vị trí
+//Cuốc chim
+document.getElementById("tool-pickaxe").addEventListener("click", () => {
+    if (toolCounts.pickaxe <= 0 || isPaused) return;
+
+    if (selectedTool === 'pickaxe') {
+        // Click lần 2 để hủy
+        selectedTool = null;
+        canvas.style.cursor = "default";
+        resetToolButtonStyles();
+    } else {
+        selectedTool = 'pickaxe';
+        canvas.style.cursor = "crosshair";
+        resetToolButtonStyles();
+        document.getElementById("tool-pickaxe").style.borderColor = "#00f0ff";
+        document.getElementById("tool-pickaxe").style.background = "#383c7a";
+    }
+});
+//Bom
+document.getElementById("tool-bomb").addEventListener("click", () => {
+    if (toolCounts.bomb <= 0 || isPaused) return;
+
+    if (selectedTool === 'bomb') {
+        // Click lần 2 để hủy
+        selectedTool = null;
+        canvas.style.cursor = "default";
+        resetToolButtonStyles();
+    } else {
+        selectedTool = 'bomb';
+        canvas.style.cursor = "crosshair";
+        resetToolButtonStyles();
+        document.getElementById("tool-bomb").style.borderColor = "#00f0ff";
+        document.getElementById("tool-bomb").style.background = "#383c7a";
+    }
+});
+//Quả tạ
+document.getElementById("tool-dumbbell").addEventListener("click", () => {
+    useDumbbell();
+});
 // click chọn Màn 1 để bắt đầu chơi
     document.querySelector(".Stage1").addEventListener("click", () => {
         ShowScreen(screen.Playmenu);
