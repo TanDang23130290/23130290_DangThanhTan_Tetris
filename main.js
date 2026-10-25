@@ -284,7 +284,7 @@ function drawNextPiece() {
     let gameSeconds = 0;      // Tổng số giây đã chơi
     let timerInterval = null; // Biến đếm thời gian
     let clockTimeout = null;  // Biến đếm ngược 30 giây hiệu lực của đồng hồ kỹ năng
-
+    let lastFlipSecond = 0; // Lưu mốc giây lần đảo ngược gần nhất
 //Hàm đếm thời gian chạy game
 function startTimer() {
     clearInterval(timerInterval);
@@ -295,6 +295,28 @@ function startTimer() {
         if (!isPaused) {
             gameSeconds++;
             updateTimerDisplay();
+            // Đặc trưng Màn 1-3: Cứ mỗi 30 giây bàn chơi sẽ đảo ngược 1 lần
+            if (currentStage === 3 && gameSeconds > 0 && gameSeconds % 30 === 0 && gameSeconds !== lastFlipSecond) {
+                lastFlipSecond = gameSeconds;
+
+                // Lật ngược toàn bộ mảng board theo chiều dọc (Hàng trên cùng thành hàng dưới cùng và ngược lại)
+                board.reverse();
+                //Dồn tất cả các khối rơi xuống sát đáy theo từng cột để tránh bị lơ lửng hoặc chạm đỉnh vô lý
+                for (let c = 0; c < Cols; c++) {
+                    let colValues = [];
+                    for (let r = 0; r < Rows; r++) {
+                        if (board[r][c] !== 0) {
+                            colValues.push(board[r][c]);
+                            board[r][c] = 0;
+                        }
+                    }
+                    // Đặt lại các khối từ đáy bàn cờ dồn lên
+                    let startRow = Rows - colValues.length;
+                    for (let i = 0; i < colValues.length; i++) {
+                        board[startRow + i][c] = colValues[i];
+                    }
+                }
+            }
         }
     }, 1000);
 }
@@ -497,7 +519,7 @@ function mergePiece() {
             if (activeClockEffect) {
                 basePoints = Math.round(basePoints * 1.3);
             }
-            score += score += basePoints;
+            score +=  basePoints;
             document.getElementById("score-value").innerText = String(score).padStart(4, '0');
         }
     }
@@ -661,6 +683,8 @@ document.querySelectorAll("[data-stage]").forEach(btn => {
         document.querySelector(".stage-title").innerText = `1-${currentStage}`;
         board = Array.from({length: Rows}, () => Array(Cols).fill(0));
         score = 0;
+        gameSeconds = 0;
+        lastFlipSecond = 0; // Reset mốc lật bàn chơi
         document.getElementById("score-value").innerText = "0000";
         resetTools();             // Reset số lượng công cụ về 3 khi vào màn chơi mới
         resetToolButtonStyles();  // Reset giao diện nút công cụ
