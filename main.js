@@ -124,6 +124,8 @@ let nextPiece=null; //Khối tiếp theo
 let currentStage = 1; //ghi lại màn chơi
 let glitchCounter = 0; // Đếm thời gian cho khối nhiễu
 let lastGrayRowSecond = 0; // Lưu mốc giây lần thêm hàng xám gần nhất ở Màn 5
+let randomMechanic = []; // Lưu 2 cơ chế ngẫu nhiên của Màn 6
+
 //Tạo khối
 const shape =[
     { shape: [[1, 1, 1, 1]], color: '#00f0ff' }, //  - Xanh lam
@@ -159,9 +161,12 @@ function spawnPiece(){
          currentPiece.color = nextPiece.color;
          currentPiece.isGlitch = nextPiece.isGlitchModal || isGlitchSpawn; // Kế thừa hoặc random tiếp theo
      }
-    // Tạo 1 khối tiếp theo (cũng áp dụng tỷ lệ 30% khối xám  nếu ở màn 2) (30% khối nhiễu ở màn 4)
-    let nextIsGray = (currentStage === 2 && Math.random() < 0.3);
-    let nextIsGlitch = (currentStage === 4 && Math.random() < 0.3);
+    // Kiểm tra có phải màn 2 hoặc 6 để thực hiện áp dụng tạo khối xám với tỉ lệ 15%
+    let hasGrayMech = (currentStage === 2 || (currentStage === 6 && randomMechanic.includes(1)));
+    let nextIsGray = (hasGrayMech && Math.random() < 0.15);
+    // Kiểm tra có phải màn 4 hoặc 6 để thực hiện áp dụng tạo khối nhiễu với tỉ lệ 30%
+    let nextHasGlitchMech = (currentStage === 4 || (currentStage === 6 && randomMechanic.includes(3)));
+    let nextIsGlitch = (nextHasGlitchMech && Math.random() < 0.3)
     const randomNextShape = shape[Math.floor(Math.random() * shape.length)];
     const randomNextColor = nextIsGray ? '#7f8c8d' : randomNextShape.color;
 
@@ -304,7 +309,9 @@ function startTimer() {
             gameSeconds++;
             updateTimerDisplay();
             // Đặc trưng Màn 1-3: Cứ mỗi 30 giây bàn chơi sẽ đảo ngược 1 lần
-            if (currentStage === 3 && gameSeconds > 0 && gameSeconds % 30 === 0 && gameSeconds !== lastFlipSecond) {
+            //Kiểm tra nếu là màn 3 hoặc 6 thì áp dụng cơ chế
+            let isFlipMech = (currentStage === 3 || (currentStage === 6 && randomMechanic.includes(2)));
+            if (isFlipMech && gameSeconds > 0 && gameSeconds % 30 === 0 && gameSeconds !== lastFlipSecond) {
                 lastFlipSecond = gameSeconds;
 
                 // Lật ngược toàn bộ mảng board theo chiều dọc (Hàng trên cùng thành hàng dưới cùng và ngược lại)
@@ -326,7 +333,9 @@ function startTimer() {
                 }
             }
             // Đặc trưng Màn 1-5: Sau mỗi 90s, đẩy bàn cờ lên và thêm 1 hàng khối xám ở đáy
-            if (currentStage === 5 && gameSeconds > 0 && gameSeconds % 90    === 0 && gameSeconds !== lastGrayRowSecond) {
+            //Kiểm tra có phải màn 5 hoặc 6 để áp dụng cơ chế
+            let isGrayRowMech = (currentStage === 5 || (currentStage === 6 && randomMechanic.includes(4)));
+            if (isGrayRowMech && gameSeconds > 0 && gameSeconds % 90 === 0 && gameSeconds !== lastGrayRowSecond) {
                 lastGrayRowSecond = gameSeconds;
 
                 // Xóa hàng trên cùng (đẩy toàn bộ bàn cờ lên trên)
@@ -541,8 +550,9 @@ function updateTimerDisplay() {
                         }
                     }
 
-                    // Nếu hàng đầy nhưng chứa khối xám (ở Màn 2), không cho phép xóa hàng này!
-                    if (currentStage === 2 ||currentStage === 5 && hasGrayBlock) {
+                    // Nếu hàng đầy nhưng chứa khối xám (ở Màn 2,5,6), không cho phép xóa hàng này!
+                    let isGrayStage = (currentStage === 2 || currentStage === 5 || (currentStage === 6 && randomMechanic.includes(1)) || (currentStage === 6 && randomMechanic.includes(4)));
+                    if (isGrayStage && hasGrayBlock) {
                         continue outer;
                     }
                     // Nếu hàng r đầy và không bị chặn bởi khối xám, tiến hành cắt bỏ và dồn xuống
@@ -735,6 +745,14 @@ function updateTimerDisplay() {
                     gameSeconds = 0;
                     lastFlipSecond = 0; // Reset mốc lật bàn chơi ở màn 3
                     lastGrayRowSecond = 0; // Reset mốc thời gian hàng xám ở màn 5
+                    // Nếu là Màn 6, chọn ngẫu nhiên 2 trong 4 cơ chế
+                    if (currentStage === 6) {
+                        let allMechs = [1, 2, 3, 4];
+                        // Xáo trộn mảng và lấy ra 2 phần tử đầu tiên
+                        allMechs.sort(() => Math.random() - 0.5);
+                        randomMechanic = [allMechs[0], allMechs[1]];
+                        console.log("Màn 6 kích hoạt 2 cơ chế:", randomMechanic); // In ra console để bạn dễ theo dõi
+                    }
                     document.getElementById("score-value").innerText = "0000";
                     resetTools();             // Reset số lượng công cụ về 3 khi vào màn chơi mới
                     resetToolButtonStyles();  // Reset giao diện nút công cụ
