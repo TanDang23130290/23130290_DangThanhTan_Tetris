@@ -37,10 +37,13 @@ document.getElementById("btn-restart").addEventListener("click", () => {
     board = Array.from({ length: Rows }, () => Array(Cols).fill(0));
     score = 0;
     document.getElementById("score-value").innerText = "0000";
+    resetTools();             // Reset số lượng công cụ về 3
+    resetToolButtonStyles();  // Reset màu nút bấm
     ShowScreen(screen.Playmenu);
     isPaused = false;
-    DrawGrid(); // Xóa sạch Canvas cũ
-    spawnPiece();
+    DrawGrid(); //Vẽ lại viền hiển thị bàn chơi
+    spawnPiece(); //Tạo khối đầu tiên
+    startTimer();//Bắt đầu đếm thời gian
     lastTime = performance.now();
     requestAnimationFrame(gameLoop);
 });
@@ -237,7 +240,7 @@ function drawNextPiece() {
             const targetCol = Math.floor(mousePos.x / Block_Size);
             const targetRow = Math.floor(mousePos.y / Block_Size);
 
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.35);'; // Màu đỏ mờ cảnh báo phá hủy
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.35)'; // Màu đỏ mờ cảnh báo phá hủy
             ctx.strokeStyle = '#ff0000';
             ctx.lineWidth = 2;
 
@@ -273,7 +276,32 @@ function drawNextPiece() {
     let dropCounter = 0;
     let dropInterval = 1000; // Khối gạch rơi xuống sau mỗi 1000ms (khoảng 1s)
     let lastTime = 0;
+    let gameSeconds = 0;      // Tổng số giây đã chơi
+    let timerInterval = null; // Biến đếm thời gian
+    let clockTimeout = null;  // Biến đếm ngược 30 giây hiệu lực của đồng hồ kỹ năng
 
+//Hàm đếm thời gian chạy game
+function startTimer() {
+    clearInterval(timerInterval);
+    gameSeconds = 0;
+    updateTimerDisplay();
+
+    timerInterval = setInterval(() => {
+        if (!isPaused) {
+            gameSeconds++;
+            updateTimerDisplay();
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    const minutes = String(Math.floor(gameSeconds / 60)).padStart(2, '0');
+    const seconds = String(gameSeconds % 60).padStart(2, '0');
+    const timeEl = document.getElementById("time-value");
+    if (timeEl) {
+        timeEl.innerText = `${minutes}:${seconds}`;
+    }
+}
 // Tạo vòng lặp chạy game chuẩn
     function gameLoop(time = 0) {
         if (isPaused) {
@@ -296,7 +324,9 @@ function drawNextPiece() {
                 spawnPiece();
                 // Kiểm tra điều kiện game over
                 if (collide(currentPiece, 0, 0)) {
-                    isPaused = true;
+                    isPaused = true; //Đổi trạng thái sang dừng gameUp
+                    clearInterval(timerInterval); // Dừng bộ đếm thời gian
+                    clearTimeout(clockTimeout);   // Dừng bộ đếm hiệu lực đồng hồ
                     document.getElementById("final-score").innerText = score;
                     ShowScreen(screen.GameOvermenu);
                     return;
@@ -484,14 +514,20 @@ function useBomb(rowIndex) {
 }
 //Chức năng của đồng hồ
 document.getElementById("tool-clock").addEventListener("click", () => {
-    if (toolCounts.clock <= 0 || isPaused) return;
-    activeClockEffect = !activeClockEffect;
+    // Nếu hết lượt hoặc đồng hồ đang trong thời gian hiệu lực 30s thì không bấm được nữa
+    if (toolCounts.clock <= 0 || isPaused || activeClockEffect) return;
 
-    // Nếu bật đồng hồ, giảm thời gian giãn cách rơi xuống 30% (từ 1000ms còn 700ms)
-    dropInterval = activeClockEffect ? 700 : 1000;
-
+    activeClockEffect = true;
+    dropInterval = 700; // Tăng tốc độ rơi (giảm 30% thời gian)
     toolCounts.clock--;
     updateToolUI('tool-clock', toolCounts.clock);
+
+    // Hủy đếm ngược cũ (nếu có) và thiết lập tự động tắt hiệu lực sau 30 giây
+    clearTimeout(clockTimeout);
+    clockTimeout = setTimeout(() => {
+        activeClockEffect = false;
+        dropInterval = 1000; // Trả lại tốc độ rơi bình thường
+    }, 30000); // 30000 ms = 30 giây
 });
  //Chức năng của quả tạ
 function useDumbbell() {
@@ -592,9 +628,16 @@ document.getElementById("tool-dumbbell").addEventListener("click", () => {
 // click chọn Màn 1 để bắt đầu chơi
     document.querySelector(".Stage1").addEventListener("click", () => {
         ShowScreen(screen.Playmenu);
-        spawnPiece(); // Tạo khối gạch đầu tiên
+        board = Array.from({ length: Rows }, () => Array(Cols).fill(0));
+        score = 0;
+        document.getElementById("score-value").innerText = "0000";
+        resetTools();             // Reset số lượng công cụ về 3 khi vào màn chơi mới
+        resetToolButtonStyles();  // Reset giao diện nút công cụ
+        spawnPiece(); //Tạo khối đầu tiên
+        startTimer(); //Bắt đầu đếm thời gian
+        isPaused = false;
         lastTime = performance.now();
-        requestAnimationFrame(gameLoop); // Bắt đầu chạy vòng lặp game
+        requestAnimationFrame(gameLoop);
     });
 
 
