@@ -30,11 +30,8 @@ document.getElementById("btn-pause-button").addEventListener("click", () => {
     isPaused = !isPaused;
     document.getElementById("btn-pause-button").innerText = isPaused ? "▶" : "⏸";
 });
-if (collide(currentPiece, 0, 0)) {
-    isPaused = true;
-    document.getElementById("final-score").innerText = score; //Xuất màn hình khi thua game
-    ShowScreen(screenGameOver);
-}
+
+
 //Nút chơi lại
 document.getElementById("btn-restart").addEventListener("click", () => {
     board = Array.from({ length: Rows }, () => Array(Cols).fill(0));
@@ -42,6 +39,7 @@ document.getElementById("btn-restart").addEventListener("click", () => {
     document.getElementById("score-value").innerText = "0000";
     ShowScreen(screen.Playmenu);
     isPaused = false;
+    DrawGrid(); // Xóa sạch Canvas cũ
     spawnPiece();
     lastTime = performance.now();
     requestAnimationFrame(gameLoop);
@@ -105,10 +103,21 @@ const Cols = 10;   //Cột
 const Rows = 20;    //Hàng
 const Block_Size = 24;  //Kích cỡ khối
 
+//Tạo công cụ hỗ trợ
+let toolCounts = {
+    pickaxe: 3,
+    bomb: 3,
+    clock: 3,
+    dumbbell: 3
+};
+let mousePos = { x: -1, y: -1 }; // Lưu tọa độ chuột trên canvas
+
+let activeClockEffect = false; // Trạng thái đồng hồ
+let selectedTool = null;       // Lưu công cụ đang chờ chọn vị trí (dành cho Cuốc chim / Bom)
 
 let board = Array.from({ length: Rows }, () => Array(Cols).fill(0));  // Vẽ bảng
 let score =0;
-let isPause=false;
+let isPaused=false;
 let nextPiece=null;
 //Tạo khối
 const shape =[
@@ -224,6 +233,41 @@ function drawNextPiece() {
                 }
             });
         });
+        //Vẽ vùng hiển thị vị trí bị phá khí sử dụng cuốc chim và bom
+        if (selectedTool && mousePos.x >= 0 && mousePos.y >= 0) {
+            const targetCol = Math.floor(mousePos.x / Block_Size);
+            const targetRow = Math.floor(mousePos.y / Block_Size);
+
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.35);'; // Màu đỏ mờ cảnh báo phá hủy
+            ctx.strokeStyle = '#ff0000';
+            ctx.lineWidth = 2;
+
+            if (selectedTool === 'pickaxe') {
+                // Cuốc chim: hiển thị phá 2 hàng dọc
+                let col1 = targetCol;
+                let col2 = targetCol + 1 < Cols ? targetCol + 1 : targetCol - 1;
+                if (col2 < 0) col2 = 0;
+
+                [col1, col2].forEach(c => {
+                    if (c >= 0 && c < Cols) {
+                        ctx.fillRect(c * Block_Size, 0, Block_Size, canvas.height);
+                        ctx.strokeRect(c * Block_Size, 0, Block_Size, canvas.height);
+                    }
+                });
+            } else if (selectedTool === 'bomb') {
+                // Bom: hiển thị phá 2 hàng ngang
+                let row1 = targetRow;
+                let row2 = targetRow + 1 < Rows ? targetRow + 1 : targetRow - 1;
+                if (row2 < 0) row2 = 0;
+
+                [row1, row2].forEach(r => {
+                    if (r >= 0 && r < Rows) {
+                        ctx.fillRect(0, r * Block_Size, canvas.width, Block_Size);
+                        ctx.strokeRect(0, r * Block_Size, canvas.width, Block_Size);
+                    }
+                });
+            }
+        }
     }
 
 // Cấu hình tickrate cho game
@@ -253,9 +297,10 @@ function drawNextPiece() {
                 spawnPiece();
                 // Kiểm tra điều kiện game over
                 if (collide(currentPiece, 0, 0)) {
-                    alert("Game Over! Bạn đã thua.");
-                    board = Array.from({length: ROWS}, () => Array(COLS).fill(0)); // Reset bàn chơi
-                    spawnPiece();
+                    isPaused = true;
+                    document.getElementById("final-score").innerText = score;
+                    ShowScreen(screen.GameOvermenu);
+                    return;
                 }
             }
             dropCounter = 0;
@@ -288,6 +333,7 @@ function drawNextPiece() {
 
 //Xử lý thao tác bàn phím
     document.addEventListener('keydown', event => {
+        if (isPaused) return; // Không nhận phím khi đang tạm dừng
         if (event.key === 'ArrowLeft') {
             //dịch sang trái
             if (!collide(currentPiece, -1, 0)) {
@@ -369,7 +415,76 @@ function drawNextPiece() {
             document.getElementById("score-value").innerText = String(score).padStart(4, '0');
         }
     }
+    //Hàm reset lại công cụ hỗ trợ khi chơi lại
+function resetTools() {
+    toolCounts = { pickaxe: 3, bomb: 3, clock: 3, dumbbell: 3 };
+    activeClockEffect = false;
+    selectedTool = null;
+    document.querySelectorAll(".tool-count").forEach((el, index) => {
+        el.innerText = "3";
+    });
+}
+//Chức năng của cuốc chim
+function usePickaxe(colIndex) {
+    if (toolCounts.pickaxe <= 0) return;
+    for (let r = 0; r < Rows; r++) {
+        board[r][colIndex] = 0;
+        if (colIndex + 1 < Cols) board[r][colIndex + 1] = 0;
+    }
+    toolCounts.pickaxe--;
+    updateToolUI('tool-pickaxe', toolCounts.pickaxe);
+}
+//Xử lý chọn vị trí sử dụng của cuốc chim
+//Chức năng của bom
+function useBomb(rowIndex) {
+    if (toolCounts.bomb <= 0) return;
+    board[rowIndex].fill(0);
+    if (rowIndex + 1 < Rows) {
+        board[rowIndex + 1].fill(0);
+    }
+    toolCounts.bomb--;
+    updateToolUI('tool-bomb', toolCounts.bomb);
+}
+//Chức năng của đồng hồ
+document.getElementById("tool-clock").addEventListener("click", () => {
+    if (toolCounts.clock <= 0 || isPaused) return;
+    activeClockEffect = !activeClockEffect;
 
+    // Nếu bật đồng hồ, giảm thời gian giãn cách rơi xuống 30% (từ 1000ms còn 700ms)
+    dropInterval = activeClockEffect ? 700 : 1000;
+
+    toolCounts.clock--;
+    updateToolUI('tool-clock', toolCounts.clock);
+});
+ //Chức năng của quả tạ
+function useDumbbell() {
+    if (toolCounts.dumbbell <= 0) return;
+    // Duyệt qua từng cột từ dưới lên để dồn các ô có màu rơi xuống sát nhau
+    for (let c = 0; c < Cols; c++) {
+        let colValues = [];
+        for (let r = 0; r < Rows; r++) {
+            if (board[r][c] !== 0) {
+                colValues.push(board[r][c]);
+                board[r][c] = 0;
+            }
+        }
+        // Đặt lại các khối từ đáy bàn cờ dồn lên
+        let startRow = Rows - colValues.length;
+        for (let i = 0; i < colValues.length; i++) {
+            board[startRow + i][c] = colValues[i];
+        }
+    }
+
+    toolCounts.dumbbell--;
+    updateToolUI('tool-dumbbell', toolCounts.dumbbell);
+}
+//Cập nhật lại số lần sử dụng công cụ lên giao diện
+function updateToolUI(elementId, count) {
+    const btn = document.getElementById(elementId);
+    if (btn) {
+        btn.querySelector(".tool-count").innerText = count;
+    }
+}
 
 // click chọn Màn 1 để bắt đầu chơi
     document.querySelector(".Stage1").addEventListener("click", () => {
