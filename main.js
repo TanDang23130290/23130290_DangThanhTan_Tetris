@@ -121,6 +121,7 @@ let board = Array.from({ length: Rows }, () => Array(Cols).fill(0));  // Vẽ b�
 let score =0; //Điểm
 let isPaused=false; //Trạng thái dừng
 let nextPiece=null; //Khối tiếp theo
+let currentStage = 1; //ghi lại màn chơi
 //Tạo khối
 const shape =[
     { shape: [[1, 1, 1, 1]], color: '#00f0ff' }, //  - Xanh lam
@@ -153,9 +154,13 @@ function spawnPiece(){
          currentPiece.shape = nextPiece.shape;
          currentPiece.color = nextPiece.color;
      }
-     //Tạo 1 khối tiếp theo
-    const randomNext = shape[Math.floor(Math.random() * shape.length)];
-    nextPiece = { shape: randomNext.shape, color: randomNext.color };
+    // Tạo 1 khối tiếp theo (cũng áp dụng tỷ lệ 30% khối xám nếu ở màn 2)
+    let nextIsGray = (currentStage === 2 && Math.random() < 0.3);
+    const randomNextShape = shape[Math.floor(Math.random() * shape.length)];
+    const randomNextColor = nextIsGray ? '#7f8c8d' : randomNextShape.color;
+
+    nextPiece = { shape: randomNextShape.shape, color: randomNextColor };
+
     currentPiece.x = Math.floor(Cols / 2) - Math.floor(currentPiece.shape[0].length / 2);
     currentPiece.y = 0;
     drawNextPiece(); // Vẽ lên ô dự báo
@@ -443,42 +448,56 @@ canvas.addEventListener("click", (event) => {
     }
 
 //Khóa khối gạch vào bảng
-    function mergePiece() {
-        currentPiece.shape.forEach((row, r) => {
-            row.forEach((value, c) => {
-                if (value !== 0) {
-                    let boardY = currentPiece.y + r;
-                    let boardX = currentPiece.x + c
-                    if (boardY >= 0) {
-                        boardY = Math.min(boardY, Rows - 1);
-                        boardX = Math.max(0, Math.min(boardX, Cols - 1));
-                        board[boardY][boardX] = currentPiece.color;//lưu màu sắc khối vào bảng
-
-                    }
+function mergePiece() {
+    currentPiece.shape.forEach((row, r) => {
+        row.forEach((value, c) => {
+            if (value !== 0) {
+                let boardY = currentPiece.y + r;
+                let boardX = currentPiece.x + c;
+                if (boardY >= 0) {
+                    boardY = Math.min(boardY, Rows - 1);
+                    boardX = Math.max(0, Math.min(boardX, Cols - 1));
+                    board[boardY][boardX] = currentPiece.color; // Lưu trực tiếp màu (xám hoặc màu thường)
                 }
-            });
+            }
         });
-    }
+    });
+}
 
 //logic dọn hàng
     function clearLines() {
         let rowCount = 0;
         outer: for (let r = Rows - 1; r >= 0; r--) {
+            let hasGrayBlock = false; // Khởi tạo lại trạng thái cho từng hàng
             for (let c = 0; c < Cols; c++) {
                 if (board[r][c] === 0) {
                     continue outer; //nếu có 1 ô trống thì bỏ qua hàng này
                 }
+                if (board[r][c] === '#7f8c8d') {
+                    hasGrayBlock = true; // Phát hiện có khối xám cản trở
+                }
             }
-            // Nếu hàng r đầy, cắt bỏ hàng đó và thêm một hàng trống 0 vào trên cùng
+
+            // Nếu hàng đầy nhưng chứa khối xám (ở Màn 2), không cho phép xóa hàng này!
+            if (currentStage === 2 && hasGrayBlock) {
+                continue outer;
+            }
+            // Nếu hàng r đầy và không bị chặn bởi khối xám, tiến hành cắt bỏ và dồn xuống
             const row = board.splice(r, 1)[0].fill(0);
             board.unshift(row);
-            r++; // Kiểm tra lại hàng hiện tại sau khi dồn xuống
+            r++;
             rowCount++;
         }
         // Cộng điểm nếu có xóa hàng (1 hàng 100, 2 hàng 300...)
         if (rowCount > 0) {
             const points = [0, 100, 300, 500, 800];
-            score += points[rowCount] || (rowCount * 100);
+            let basePoints = points[rowCount] || (rowCount * 100);
+
+            // Nếu đồng hồ đang kích hoạt, thưởng thêm 30% điểm
+            if (activeClockEffect) {
+                basePoints = Math.round(basePoints * 1.3);
+            }
+            score += score += basePoints;
             document.getElementById("score-value").innerText = String(score).padStart(4, '0');
         }
     }
@@ -505,10 +524,17 @@ function usePickaxe(colIndex) {
 //Chức năng của bom
 function useBomb(rowIndex) {
     if (toolCounts.bomb <= 0) return;
-    board[rowIndex].fill(0);
-    if (rowIndex + 1 < Rows) {
-        board[rowIndex + 1].fill(0);
+    let row1 = rowIndex;
+    let row2 = rowIndex + 1;
+
+    if (row2 >= Rows) {
+        row2 = Rows - 1;
+        row1 = Rows - 2;
     }
+
+    if (row1 >= 0 && row1 < Rows) board[row1].fill(0);
+    if (row2 >= 0 && row2 < Rows) board[row2].fill(0);
+
     toolCounts.bomb--;
     updateToolUI('tool-bomb', toolCounts.bomb);
 }
@@ -626,9 +652,14 @@ document.getElementById("tool-dumbbell").addEventListener("click", () => {
     useDumbbell();
 });
 // click chọn Màn 1 để bắt đầu chơi
-    document.querySelector(".Stage1").addEventListener("click", () => {
+document.querySelectorAll("[data-stage]").forEach(btn => {
+    btn.addEventListener("click", () => {
+        currentStage = parseInt(btn.getAttribute("data-stage"));
         ShowScreen(screen.Playmenu);
-        board = Array.from({ length: Rows }, () => Array(Cols).fill(0));
+
+        // Cập nhật tiêu đề hiển thị màn chơi ở sidebar (ví dụ: 1-2, 1-3...)
+        document.querySelector(".stage-title").innerText = `1-${currentStage}`;
+        board = Array.from({length: Rows}, () => Array(Cols).fill(0));
         score = 0;
         document.getElementById("score-value").innerText = "0000";
         resetTools();             // Reset số lượng công cụ về 3 khi vào màn chơi mới
@@ -639,6 +670,7 @@ document.getElementById("tool-dumbbell").addEventListener("click", () => {
         lastTime = performance.now();
         requestAnimationFrame(gameLoop);
     });
+});
 
 
 
