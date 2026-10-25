@@ -33,7 +33,7 @@
     <div id="play-menu" class="screen">
         <!-- Nút thoát -->
         <button id="btn-close-button" class="btn-close">X</button>
-
+        <button id="btn-pause-button" class="btn-pause" style="position: absolute; top: 10px; right: 55px; background: transparent; border: none; color: #8a8dcd; font-size: 1.4rem; font-weight: bold; cursor: pointer; z-index: 10;">⏸</button>
         <div class="play-layout">
             <!-- Thêm canvas bàn chơi bên trái để khớp với giao diện  -->
             <div class="game-board-container" style="display:inline-block; vertical-align:top;">
@@ -66,6 +66,10 @@
                 </div>
             </div>
         </div>
+    </div>
+    <div id="gameover-menu" class="screen">
+        <button id="btn-restart" class="btn-primary">Chơi lại</button>
+        <button id="btn-back-to-select" class="btn-back">Chọn màn</button>
     </div>
 </div>
 //
